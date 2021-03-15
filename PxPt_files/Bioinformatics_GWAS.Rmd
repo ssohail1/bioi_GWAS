@@ -1,0 +1,70 @@
+---
+title: "Bioinformatics Homework 5"
+author: "Sidra Sohail"
+date: "December 11, 2020"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+Pixieplatin (PxPt) is a new chemotherapeutic agent developed by Faerie Pharmaceuticals. Unfortunately, one of the major side effects of the drug is thrombocytopenia (low platelet counts), which could lead to dangerous internal bleeding. Platelet counts have been measured in 922 individuals of European ancestry after treatment with PxPt. **Perform a GWAS on the platelet count (log-transformed) phenotype.** Genotypes are in PLINK binary format files (`bed/bim/fam`, genome build `hg19`) and phenotypes are in the `PxPt_PLT_counts.txt` file.
+
+Answer the following questions about your analysis and embed relevant code and plots into the `.Rmd` file.
+
+#### 1. Show the plink command you used to run your GWAS below and explain what each option within the command does.
+```
+./plink --bfile PxPt --maf 0.05 --linear --adjust --pheno PxPt_PLT_counts.txt --pheno-name logPLT --out PxPt_log
+```
+## The bfile option specifies the files that begin with "PxPt" and that are in binary format, in this case referring to the PxPt.bed file. The maf 0.05 option filters any minor allele frequency (maf) that is less than 0.05. The linear option runs for each SNP a linear additive association test. The adjust option adjusts the p-values of each SNP, and it does so through using multiple-testing correction methods. The pheno option specifies the phenotype file name, in this case the PxPt_PLT_counts.txt file. The pheno-name option specifies the column name of the phenotype to use in the phenotype file, and here the column name is logPLT. The out option specifies the output file prefix, such that in this case each output file will begin with PxPt_log.
+
+
+
+#### 2. Make a Q-Q plot and a Manhattan plot of your results. In your Manhattan plot, only show the genome-wide significance horizontal line and change the black and gray points in your Manhattan plot to something more colorful. Embed your code and plots below. Write a figure legend, like you would see in a scientific journal, that explains what is represented in your plots.
+
+```{r}
+#install.packages('qqman')
+setwd("~/Desktop/HW5_GWAS/")
+library(qqman)
+data = read.table("PxPt_log.assoc.linear",header = T)
+manhattan(x = data, chr = "CHR", bp = "BP", p = "P", snp = "SNP", col = c("blue4", "orange3"), chrlabs = NULL, genomewideline = -log10(5e-08), suggestiveline = FALSE, highlight = NULL, logp = TRUE, annotatePval = NULL)
+```
+**Figure 1.** Manhattan Plot. The Manhattan plot shows the 587500 SNPs plotted according to their chromosome number (x-axis) and unadjusted p-values (y-axis), where the red line signifies the genome-wide significance of 5e-08. There are 6 SNPs with unadjusted p-values less than the genome-wide significance of 5e-08, and so those 6 SNPs are above the red line. Of these, 5 SNPs are located on chromosome 3 and 1 SNP is located on chromosome 9 (there are two SNPs with very close p-values; one at 4.567e-13 and other at 4.759e-13 and so they appear as one dot on the plot).
+
+```{r}
+qq(data$P)
+```
+**Figure 2.** Quantile-Quantile Plot. The Q-Q plot assesses the number and magnitude of observed associations between the SNPs and phenotype (disease or trait), which are then compared to association statistics expected where the null hypothesis is no association. On the above QQ-plot, the expected p-values given the number of SNPs are plotted on the x-axis and the observed p-values are plotted on the y-axis. The red line is when y=x, and this small deviation from the line can be due to a polygenic phenotype where there are many variants of small effect across the allele.
+
+
+
+#### 3. How many SNPs are genome-wide significant? List the SNPs here and explain how you defined genome-wide significance.
+There are 6 SNPs that are genome-wide significant, and they are rs11130549, rs7636889, rs7636574, rs1500712, rs17288929, rs16911097. I defined the genome-wide significance by the unadjusted p-values of SNPs that are less than the genome-wide significance p-value of 5e-08.
+
+
+
+#### 4. What is known about your top SNP? Is it located in or near a gene? Have nearby genes been implicated in other GWAS? Cite databases, genome browsers, and/or journal articles. Embed a LocusZoom plot to show the genomic context of your top SNP.
+
+![Locus Zoom Plot of rs11130549.](/Users/sidra/Desktop/HW5_GWAS/LocusZoomPlot.png)
+#The top SNP rs11130549 is located near the ARHGEF3 gene, and looking at the NCBI SNP database it is known that its variation type is single nucleotide variation (https://www.ncbi.nlm.nih.gov/snp/rs11130549). Also, by viewing this SNP in the GWAS Catalog it is known that this SNP is an intron variant and is associated with PHF-tau measurement, also known as paired helical filament tau measurement (https://www.ebi.ac.uk/gwas/variants/rs11130549).
+#The ARHGEF3 gene has been implicated in many genome-wide association studies, and this gene is described as a Rho guanine nucleotide exchange factor 3 and its trait is mean platelet volume (https://www.ebi.ac.uk/gwas/genes/ARHGEF3). There are many GWAS of this gene that report the trait mean platelet volume or platelet count, but some report traits of multiple sclerosis and rheumatoid arthritis (https://www.ebi.ac.uk/gwas/genes/ARHGEF3).
+
+
+
+#### 5. Make a boxplot and figure legend of your top hit’s genotype vs. phenotype. Embed your code and plot below. Is the minor allele associated with increased or decreased platelet counts? Based on this result, are patients with the minor allele more likely or less likely to have thrombocytopenia?
+
+```{r}
+genotypes = read.table("rs11130549_PxPt.raw", header = T)
+phenotypes = read.table("PxPt_PLT_counts.txt", header = T)
+boxplot(phenotypes$logPLT ~ genotypes$rs11130549_G, ylab = "PxPt log(PLT)", xlab = "rs11130549 genotype")
+```
+**Figure 3.** Boxplot. The boxes indicate the interquartile range (IQR), where the bottom whisker includes values from first quartile to lowest value which is within 1.5 * IQR. The top whisker includes values from third quartile up to highest value within 1.5 * IQR. Patients homozygous for the major allele are associated with decreased platelet counts, patients that are heterozygous have average platelet counts, and patients that are homozygous for the minor allele are associated with increased platelet counts. The dark black line indicates the median of each genotype.
+
+Patients homozygous for the minor allele are associated with increased platelet counts and are less likely to have thrombocytopenia.
+
+
+
+#### 6. What analyses and experiments would you do next to follow-up on your findings?
+A nucleic-based assay, like a SNP genotyping using real-time PCR, could be run to see why patients homozygous for the major allele have decreased platelet counts and patients homozygous for the minor allele have increased platelet counts. 
+
+
+
