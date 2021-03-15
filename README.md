@@ -8,4 +8,3 @@ Toy Model: Pixieplatin (PxPt) is a new chemotherapeutic agent developed by Faeri
 
 Answer the questions about your analysis and embed relevant code and plots into the `.Rmd` file.
 
-Note: the PxPt.bed file is too large so cannot be uploaded
