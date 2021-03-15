@@ -67,4 +67,3 @@ Patients homozygous for the minor allele are associated with increased platelet 
 A nucleic-based assay, like a SNP genotyping using real-time PCR, could be run to see why patients homozygous for the major allele have decreased platelet counts and patients homozygous for the minor allele have increased platelet counts. 
 
 
-
